@@ -10,6 +10,7 @@ const MAX_REQUESTS= 5;
 
 const store = new Map<string, RateLimitEntry>();
 
+//Fixed Window Counter
 export function rateLimiter(req: Request, res:Response, next: NextFunction){
     const ip: string | undefined = req.ip; //could be user id, apiKey anything that identifies a client as unique
     const currentTime = Date.now();
@@ -33,4 +34,26 @@ export function rateLimiter(req: Request, res:Response, next: NextFunction){
     
     return res.status(429).send('Too many requests - try again later');
 
+}
+
+//Sliding Window Log
+const store1 = new Map<string, number[]>();
+
+export const slidingWindowLogRateLimiter = (req: Request, res: Response, next: NextFunction) =>{
+    const ip: string = req.ip!;
+    const currentTime = Date.now();
+
+    const timestamps: number[] = store1.get(ip) || [];
+
+    //remove request outside window frame
+    const recent = timestamps.filter((time)=> currentTime-time <= WINDOW_SIZE);
+
+    if(recent.length >= MAX_REQUESTS){
+        return res.status(429).send('Too many requests - try again later');
+
+    }
+
+    recent.push(currentTime);
+    store1.set(ip, recent);
+    next();
 }
