@@ -2,14 +2,18 @@
 import EventEmitter from "events"
 export const eventBus = new EventEmitter()
 
+
 eventBus.on('orderCreated', async(order)=>{
     await SendEmail(order);
-    await updateAnalytics(order);
 })
+eventBus.on('orderCreated', async(order)=>{
+    await updateAnalytics(order);
 
+})
 async function SendEmail(order) {
     // Simulate email sending logic
     console.log(`Sending email for order: ${JSON.stringify(order)}`);
+    throw new Error('Email service is down');
 }
 
 async function updateAnalytics(order) {
